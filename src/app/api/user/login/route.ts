@@ -1,14 +1,14 @@
 import jwt from "jsonwebtoken";
 
-import { DB, readDB } from "@lib/DB";
-import { NextResponse } from "next/server";
+import { DB, readDB,Database } from "@lib/DB";
+import { NextRequest, NextResponse } from "next/server";
 
-export const POST = async (request) => {
+export const POST = async (request: NextRequest) => {
   readDB();
   const body = await request.json();
   const { username, password } = body;
 
-  const user = DB.users.find(
+  const user = (<Database>DB).users.find(
     (user) => user.username === username && user.password === password
   );
 
@@ -21,11 +21,13 @@ export const POST = async (request) => {
       { status: 400 }
     );
 
-  const token = jwt.sign(
-    { username, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "8h" }
-  );
+    const secret = process.env.JWT_SECRET || "This is another secret";
+
+    const token = jwt.sign(
+      { role: user.role },
+      secret,
+      { expiresIn: "8h" }
+    );
 
   return NextResponse.json({ ok: true, token });
 };
