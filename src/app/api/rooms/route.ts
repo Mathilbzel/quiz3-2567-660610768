@@ -14,7 +14,7 @@ export const GET = async () => {
 
 export const POST = async (request: NextRequest) => {
   const payload = checkToken();
-  if (payload === null)
+  if (!payload)
     return NextResponse.json(
       {
         ok: false,
@@ -22,9 +22,9 @@ export const POST = async (request: NextRequest) => {
       },
       { status: 401 }
     );
-
+  
+    const body = await request.json();
   readDB();
-  const body = await request.json();
   const { roomName } = body;
   for (const room of (<Database>DB).rooms)
     if (room.roomName === roomName)
