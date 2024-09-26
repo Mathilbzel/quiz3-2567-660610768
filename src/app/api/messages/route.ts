@@ -2,6 +2,7 @@ import { DB, readDB, writeDB } from "@lib/DB";
 import { checkToken } from "@lib/checkToken";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 export const GET = async (request: NextRequest) => {
   readDB();
@@ -39,10 +40,10 @@ export const POST = async (request: NextRequest) => {
     );
 
   const messageId = nanoid();
-  DB.messages.push({
-    roomId,
-    messageId,
-    messageText,
+    DB.messages.push({
+      roomId,
+      messageId,
+      messageText,
   });
 
   writeDB();
