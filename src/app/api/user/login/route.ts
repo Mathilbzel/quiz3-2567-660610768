@@ -11,6 +11,7 @@ export const POST = async (request: NextRequest) => {
   const user = DB.users.find(
     (user) => user.username === username && user.password === password
   );
+
    if(!user)
    return NextResponse.json(
      {

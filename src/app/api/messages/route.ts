@@ -8,20 +8,20 @@ export const GET = async (request: NextRequest) => {
   const roomId = request.nextUrl.searchParams.get("roomId");
   const roomResult = DB.rooms.find((r) => r.roomId === roomId);
   if (!roomResult)
-   return NextResponse.json(
-     {
-       ok: false,
-       message: `Room is not found`,
-     },
-     { status: 404 }
-   );
-   const result = [];
-   for (const message of DB.messages)
-     if (message.roomId === roomId) result.push(message);
-   return NextResponse.json({
-     ok: true,
-     messages: result,
-   });
+    return NextResponse.json(
+      {
+        ok: false,
+        message: `Room is not found`,
+      },
+      { status: 404 }
+    );
+  const result = [];
+  for (const message of DB.messages)
+    if (message.roomId === roomId) result.push(message);
+  return NextResponse.json({
+    ok: true,
+    messages: result,
+  });
  };
 
 export const POST = async (request: NextRequest) => {
@@ -80,6 +80,7 @@ export const DELETE = async (request: NextRequest) => {
       { status: 404 }
     );
 
+  DB.messages = DB.messages.filter((msg) => msg.messageId != messageId);
   writeDB();
 
   return NextResponse.json({
