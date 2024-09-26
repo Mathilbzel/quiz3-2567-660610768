@@ -1,14 +1,14 @@
-import { DB, readDB, writeDB } from "@lib/DB";
-import { checkToken } from "@lib/checkToken";
+import { DB, readDB, writeDB, Database } from "@lib/DB";
+import { checkToken, Payload } from "@lib/checkToken";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 export const GET = async (request: NextRequest) => {
-  readDB();
   const roomId = request.nextUrl.searchParams.get("roomId");
-  const roomResult = DB.rooms.find((r) => r.roomId === roomId);
-  if (!roomResult)
+  readDB();
+  const rooms = (<Database>DB).rooms;
+  const room = rooms.find((r) => r.roomId === roomId);
+  if (!room) {
     return NextResponse.json(
       {
         ok: false,
@@ -16,21 +16,20 @@ export const GET = async (request: NextRequest) => {
       },
       { status: 404 }
     );
-  const result = [];
-  for (const message of DB.messages)
-    if (message.roomId === roomId) result.push(message);
+  }
+  const messages = (<Database>DB).messages.filter((msg) => msg.roomId === roomId);
   return NextResponse.json({
     ok: true,
-    messages: result,
+    message: messages,
   });
- };
+};
 
 export const POST = async (request: NextRequest) => {
-  readDB();
   const body = await request.json();
-  const { roomId, messageText } = body;
-  const roomResult = DB.rooms.find((r) => r.roomId === roomId);
-  if (!roomResult)
+  readDB();
+  const data = <Database>DB;
+  const room = data.rooms.find((r) => r.roomId === body.roomId);
+  if (!room) {
     return NextResponse.json(
       {
         ok: false,
@@ -38,28 +37,25 @@ export const POST = async (request: NextRequest) => {
       },
       { status: 404 }
     );
-
+  }
   const messageId = nanoid();
-    DB.messages.push({
-      roomId,
-      messageId,
-      messageText,
+  data.messages.push({
+    roomId: room.roomId,
+    messageId: messageId,
+    messageText: body.messageText,
   });
-
   writeDB();
 
   return NextResponse.json({
     ok: true,
-    messageId,
+    messageId: messageId,
     message: "Message has been sent",
   });
 };
 
 export const DELETE = async (request: NextRequest) => {
   const payload = checkToken();
-  const body = await request.json();
-  const { messageId } = body;
-  if (payload === null || payload.role !== "SUPER_ADMIN")
+  if ((<Payload>payload).role !== "SUPER_ADMIN") {
     return NextResponse.json(
       {
         ok: false,
@@ -67,12 +63,12 @@ export const DELETE = async (request: NextRequest) => {
       },
       { status: 401 }
     );
-
+  }
+  const body = await request.json();
   readDB();
-  const delMessage = DB.messages.find(
-    (message) => message.messageId === messageId
-  );
-  if (!delMessage)
+  const messages = (<Database>DB).messages;
+  const message = messages.find((msg) => msg.messageId === body.messageId);
+  if (!message) {
     return NextResponse.json(
       {
         ok: false,
@@ -80,8 +76,8 @@ export const DELETE = async (request: NextRequest) => {
       },
       { status: 404 }
     );
-
-  DB.messages = DB.messages.filter((msg) => msg.messageId != messageId);
+  }
+  (<Database>DB).messages = messages.filter((msg) => msg.messageId !== body.messageId)
   writeDB();
 
   return NextResponse.json({
